@@ -5,8 +5,8 @@ declare module 'knex/types/tables' {
         meals: {
             id: string,
             name: string,
-            description: string,
-            time: string,
+            description: string | null,
+            time: string | null,
             in_diet: boolean,
             session_id:string
         }
