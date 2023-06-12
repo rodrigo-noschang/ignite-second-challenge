@@ -1,10 +1,15 @@
 import knex, { Knex } from 'knex';
 
+import { env } from './env';
+
+const databaseURL = env.DATABASE_CLIENT === 'pg' ? env.DATABASE_URL :
+    {
+        filename: env.DATABASE_URL
+    }
+
 export const knexConfig: Knex.Config = {
-    client: 'sqlite3',
-    connection: {
-        filename: './db/app.db',
-    },
+    client: env.DATABASE_CLIENT,
+    connection: databaseURL,
     useNullAsDefault: true,
     migrations: {
         extension: 'ts',

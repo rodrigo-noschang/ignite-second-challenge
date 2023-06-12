@@ -5,7 +5,9 @@ config();
 
 const environmentVariablesSchema = z.object({
     PORT: z.coerce.number().default(3333),
-    NODE_ENV: z.enum(['development', 'test', 'production']).default('development')
+    NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+    DATABASE_CLIENT: z.enum(['sqlite3', 'pg']),
+    DATABASE_URL: z.string()
 })
 
 const parsedSchema = environmentVariablesSchema.safeParse(process.env);
