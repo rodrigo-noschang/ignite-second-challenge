@@ -12,6 +12,7 @@ describe('Meals tests', () => {
     })
 
     afterAll(async () => {
+        execSync('npm run knex migrate:rollback --all');
         await app.close();
     })
 
@@ -104,5 +105,81 @@ describe('Meals tests', () => {
                 description: 'Meal from user 1',
             })
         )
+    })
+
+    it('should be able to update meal', async () => {
+        const createdMeal = await request(app.server)
+            .post('/meals')
+            .send({
+                name: 'Original name',
+                description: 'Description to the original meal',
+                in_diet: false
+            })
+
+        const cookies = createdMeal.get('Set-Cookie');
+
+        const mealsResponse = await request(app.server)
+            .get('/meals')
+            .set('Cookie', cookies)
+
+        const mealId = mealsResponse.body.meals[0].id;
+
+        await request(app.server)
+            .put(`/meals/${mealId}`)
+            .send({
+                name: "Updated name",
+                description: 'Description to the updated meal',
+                in_diet: true
+            })
+            .set('Cookie', cookies)
+
+        const updatedMealResponse = await request(app.server)
+            .get(`/meals/${mealId}`)
+            .set('Cookie', cookies)
+
+        expect(updatedMealResponse.body.meal).toEqual(
+            expect.objectContaining({
+                name: "Updated name",
+                description: 'Description to the updated meal',
+            })
+        )
+
+        expect(updatedMealResponse.body.meal).not.toEqual(
+            expect.objectContaining({
+                name: 'Original name',
+                description: 'Description to the original meal',
+            })
+        )
+    })
+
+    it('should be able to delete meal', async () => {
+        const createdMeal = await request(app.server)
+            .post('/meals')
+            .send({
+                name: 'Original name',
+                description: 'Description to the original meal',
+                in_diet: false
+            })
+
+        const cookies = createdMeal.get('Set-Cookie');
+
+        const mealsResponse = await request(app.server)
+            .get('/meals')
+            .set('Cookie', cookies)
+        
+        expect(mealsResponse.body.meals).toHaveLength(1);
+
+        const mealId = mealsResponse.body.meals[0].id;
+
+        await request(app.server)
+            .delete(`/meals/${mealId}`)
+            .set('Cookie', cookies)
+            .expect(204)
+
+        const deletedMealResponse = await request(app.server)
+            .get('/meals')
+            .set('Cookie', cookies)
+        
+        expect(deletedMealResponse.body.meals).toHaveLength(0);
     })
 })
