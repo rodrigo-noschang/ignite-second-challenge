@@ -4,6 +4,7 @@ import { FastifyInstance } from 'fastify';
 
 import { knexConnection } from '../databaseConfig';
 import { isSessionIdInCookies } from '../middlewares/is-sessionId-in-cookies';
+import { calculateBestSequence } from '../utils/calculateBestSequence';
 
 export const mealsRoutes = async (app: FastifyInstance) => {
     app.post('/', async (request, reply) => {
@@ -40,7 +41,8 @@ export const mealsRoutes = async (app: FastifyInstance) => {
 
         const meals = await knexConnection('meals')
             .select('*')
-            .where('session_id', sessionId);
+            .where('session_id', sessionId)
+            .orderBy('time', 'asc');
 
         return { meals }
     })
@@ -71,6 +73,25 @@ export const mealsRoutes = async (app: FastifyInstance) => {
             return { meal };
         }
     )
+
+    app.get('/metrics', async (request) => {
+        const { sessionId } = request.cookies
+
+        const meals = await knexConnection('meals')
+            .select('*')
+            .where('session_id', sessionId)
+            .orderBy('time', 'asc');
+
+        const total = meals.length;
+        const inDietMeals = meals.reduce((acc, curr) => {
+            return curr.in_diet ? acc + 1 : acc
+        }, 0)
+        const offDietMeals = total - inDietMeals;
+
+        const bestSequence = calculateBestSequence(meals);
+
+        return { total, inDietMeals, offDietMeals, bestSequence }
+    })
 
     app.put('/:id', 
         {
