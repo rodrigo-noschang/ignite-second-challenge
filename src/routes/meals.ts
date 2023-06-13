@@ -42,7 +42,7 @@ export const mealsRoutes = async (app: FastifyInstance) => {
         const meals = await knexConnection('meals')
             .select('*')
             .where('session_id', sessionId)
-            .orderBy('time', 'asc');
+            .orderBy('time', 'desc');
 
         return { meals }
     })
@@ -80,7 +80,7 @@ export const mealsRoutes = async (app: FastifyInstance) => {
         const meals = await knexConnection('meals')
             .select('*')
             .where('session_id', sessionId)
-            .orderBy('time', 'asc');
+            .orderBy('time', 'desc');
 
         const total = meals.length;
         const inDietMeals = meals.reduce((acc, curr) => {
@@ -89,6 +89,7 @@ export const mealsRoutes = async (app: FastifyInstance) => {
         const offDietMeals = total - inDietMeals;
 
         const bestSequence = calculateBestSequence(meals);
+
 
         return { total, inDietMeals, offDietMeals, bestSequence }
     })
